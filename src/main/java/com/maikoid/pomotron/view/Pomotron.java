@@ -98,7 +98,7 @@ public class Pomotron implements Observer {
 			tray.setStatus(String.format("Long Break: %s.", timeLeftString).toString());
 			break;
 		case INACTIVE:
-			tray.setImage(PomotronUtils.createTrayIconImage("P", 0.75));
+			tray.setImage(PomotronUtils.createTrayIconImage("", 0.75));
 			break;
 		}
 	}

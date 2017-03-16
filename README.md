@@ -1,54 +1,32 @@
 # Pomotron
-Simple and extensible pomodoro timer in the system tray.
+Simple and extensible Pomodoro timer in the system tray.
 
 ## Description 
-Pomotron aims to be a simple pomodoro timer with the following features:
-- Extensible in every way
-- Timer functions operatable from the system tray
-- Cross-platform (at least Linux and Windows)
-- Completed pomodoro count display
-- Desktop notifications on completed pomodoro/break
-- Minimal build dependencies
+Pomotron aims to be a simple Pomodoro timer with the following features:
+- Extensible in every way;
+- Interaction directly from the system tray;
+- Cross-platform powered by Java + SystemTray;
+- Completed Pomodoro count display;
+- Deb package.
 
-The applications started from a fork of Pomotron
+This application is inspired in Tomotron
 
 ## Usage
-Run the jar file. A tray icon (``P`` on a grey background) is displayed.
-Right click the tray icon to start pomodoros and breaks.
-
-When a pomodoro or break is completed, a desktop notification is displayed.
-
-The icon color and text is as follows
-- Grey: Inactive and showing ``P`` displayed (stands for Pomodoro)
-- Red: Pomodoro in progress, remaining time displayed
-- Green: Short break in progress, remaining time displayed
-- Blue: Long break in progress, remaining time displayed
+A shortcut (.desktop) file called Pomodoro is installed.
+Click in the tray icon to start Pomodoros and Breaks.
 
 Remaining time is given in minutes if more than a minute is left. If less then a minute is left, the remaining seconds are displayed.
 
-## INSTALL
-###Ubuntu with Unity
-From ```pomotron``` directory execute:
-```bash
-# install.sh
-```
-Run from Unity Dash
+## Ubuntu* INSTALL/UNINSTALL
 
-###Another Enviroment
-- From ```pomotron/src``` directory execute:
+Download the .deb package in ``target/pomotron_1.0~SNAPSHOT_all.deb``
 ```bash
- # javac -verbose -d ../bin/classes ./pomotron/model/*.java ./pomotron/controller/*.java  ./pomotron/view/*.java && jar vcmf Manifest.txt ../bin/pomotron -C ../bin/classes .;
+	sudo dpkg -i pomotron_1.0~SNAPSHOT_all.deb
+	sudo update-desktop-database
 ```
-Run from terminal
-```bash
- $ java -jar ../bin/pomotron
-```
-## UNINSTALL
-###Ubuntu with Unity
-- From ```pomotron``` directory execute:
-```bash
-# uninstall.sh
-```
- 
 
+```bash
+	sudo apt remove pomotron
+```
 
+* Ubuntu 16.10 tested.
