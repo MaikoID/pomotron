@@ -1,0 +1,10 @@
+Package: pomotron
+Version: 1.0
+Section: misc
+Priority: low
+Architecture: all
+Description: Pomotron, another pomodoro timer.
+Maintainer: Maiko Cezar <maiko.cezar@gmail.com>
+Depends: default-jre | java7-runtime
+Distribution: development
+Homepage: https://github.com/MaikoID/pomotron
