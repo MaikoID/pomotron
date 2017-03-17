@@ -1,5 +1,7 @@
 package com.maikoid.pomotron.model;
 
+import org.joda.time.Duration;
+
 public interface IChronometer extends Subject{
 
 	enum STATE { 
@@ -23,8 +25,7 @@ public interface IChronometer extends Subject{
 	void start();
 	void pause();
 	void stop();
-	void setMinutes(int minutes);
-	int getMinutes();
-	int getCurrentTime();
+	void setTime(Duration time);
+	Duration getTime();	
 	STATE getState();
 }

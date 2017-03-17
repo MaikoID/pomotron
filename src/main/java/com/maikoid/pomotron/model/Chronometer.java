@@ -3,45 +3,46 @@ package com.maikoid.pomotron.model;
 import java.util.*;
 import java.util.TimerTask;
 
+import org.joda.time.Duration;
+
 public class Chronometer extends TimerTask implements IChronometer, Cloneable {
 
-	protected int minutes;
+	protected Duration time;
 	protected Set<Observer> obs;
 	private STATE state = null;
-	protected Integer secondsRemaining = null;
 
 	public Chronometer() {
 		this.obs = Collections.synchronizedSet(new HashSet<Observer>());
 	}
 
+	@Override
 	public void start() {
 		if (getState() != STATE.RUNNING) {
-			if (secondsRemaining == null)
-				secondsRemaining = new Integer(minutes * 60);
 			setState(STATE.RUNNING);
 		}
 	}
 
+	@Override
 	public void pause() {
 		setState(STATE.PAUSED);
 	}
 
+	@Override
 	public void stop() {
 		setState(STATE.STOPPED);
 	}
 
-	public void setMinutes(int minutes) {
-		this.minutes = minutes;
+	@Override
+	public void setTime(Duration newTime) {
+		time = newTime;
 	}
 
-	public int getMinutes() {
-		return minutes;
+	@Override
+	public Duration getTime() {
+		return time;
 	}
 
-	public int getCurrentTime() {
-		return secondsRemaining;
-	}
-
+	@Override
 	public STATE getState() {
 		return this.state;
 	}
@@ -49,10 +50,10 @@ public class Chronometer extends TimerTask implements IChronometer, Cloneable {
 	protected void setState(STATE state) {
 		if (getState() != state) {
 			this.state = state;
-			notifyObservers();
 		}
 	}
 
+	@Override
 	public void attach(Observer o) {
 		synchronized (obs) {
 			if (o != null)
@@ -61,13 +62,15 @@ public class Chronometer extends TimerTask implements IChronometer, Cloneable {
 
 	}
 
-	public void dettach(Observer o) {
+	@Override
+	public void detach(Observer o) {
 		synchronized (obs) {
 			if (o != null && obs.contains(o))
 				obs.remove(o);
 		}
 	}
 
+	@Override
 	public void notifyObservers() {
 		synchronized (obs) {
 			for (Observer o : obs)
@@ -86,18 +89,17 @@ public class Chronometer extends TimerTask implements IChronometer, Cloneable {
 		if (getState() != null) {
 			switch (getState()) {
 			case RUNNING:
-				if (secondsRemaining <= 0) {
-					setState(STATE.FINISHED);
-				} else {
-					secondsRemaining--;
+				if (time.getStandardSeconds() > 0) {
+					time = time.minus(1 * 1000);
 					notifyObservers();
-				}
+				} else
+					setState(STATE.FINISHED);
 				break;
 			case PAUSED:
-				break;
 			case STOPPED:
 			case FINISHED:
 				this.cancel();
+				notifyObservers();
 				break;
 			}
 		}

@@ -1,28 +1,30 @@
 package com.maikoid.pomotron.model;
 
+import org.joda.time.Duration;
+
 public class PomodoroFactory implements IPomodoroCreator{
 
-	public static int WorkingTime = 25;
+	public static Duration WorkingTime = new Duration(5*1000);
 
-	public int LongBreakTime = 15;
+	public static Duration LongBreakTime = new Duration(5*1000);
 
-	public int ShortBreakTime = 5;
+	public static Duration ShortBreakTime = new Duration(5*1000);
 	
 	public IChronometer workPomodoro(){ 
 		Pomodoro p = new Pomodoro();
-		p.setMinutes(WorkingTime);
+		p.setTime(WorkingTime);		
 		return p;
 	}
 
 	public IChronometer longBreakPomodoro(){ 
 		Pomodoro p = new Pomodoro();
-		p.setMinutes(LongBreakTime);
+		p.setTime(LongBreakTime);
 		return p;
 	}
 
 	public IChronometer shortBreakPomodoro(){ 
 		Pomodoro p = new Pomodoro();
-		p.setMinutes(ShortBreakTime);
+		p.setTime(ShortBreakTime);
 		return p;
 	}
 

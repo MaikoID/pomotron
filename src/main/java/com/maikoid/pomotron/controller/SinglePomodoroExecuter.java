@@ -1,5 +1,8 @@
 package com.maikoid.pomotron.controller;
 
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.Timer;
 
 import com.maikoid.pomotron.model.IChronometer;
@@ -9,9 +12,20 @@ import com.maikoid.pomotron.model.Observer;
 import com.maikoid.pomotron.model.Pomodoro;
 import com.maikoid.pomotron.model.PomodoroFactory;
 
-public class SinglePomodoroExecuter implements Observer {
+public class SinglePomodoroExecuter implements Observer, Subject {
 	public enum PomodoroType {
-		INACTIVE, WORK, SHORT_BREAK, LONG_BREAK
+		INACTIVE("in"), WORK("Work"), SHORT_BREAK("Short Break"), LONG_BREAK("Long Break");
+		
+		private final String text;
+
+		private PomodoroType(final String text) {
+			this.text = text;
+		}    
+
+		@Override
+		public String toString() {
+			return text;
+		}
 	}
 
 	public PomodoroType type;
@@ -19,6 +33,8 @@ public class SinglePomodoroExecuter implements Observer {
 	private Timer timer;
 	private static int completedPomodoros = 0;
 	private Pomodoro p = null;
+	
+	protected Set<Observer> obs;
 
 	public void start() throws IllegalStateException {
 		if (timer != null)
@@ -31,11 +47,8 @@ public class SinglePomodoroExecuter implements Observer {
 
 	public void end() {
 		if (p != null) {
-			p.stop();
-			type = PomodoroType.INACTIVE;			
-			
-			timer.purge();
-			timer.cancel();
+			p.stop();				
+			p.detach(this);			
 		}
 	}
 
@@ -46,8 +59,14 @@ public class SinglePomodoroExecuter implements Observer {
 	public static int getCompletedPomodoros() {
 		return completedPomodoros;
 	}
+	
+	public SinglePomodoroExecuter(PomodoroType type, Observer o) {
+		this(type);		
+		attach(o);
+	}
 
 	public SinglePomodoroExecuter(PomodoroType type) {
+		
 		IPomodoroCreator icc = new PomodoroFactory();
 		this.type = type;
 
@@ -65,6 +84,8 @@ public class SinglePomodoroExecuter implements Observer {
 			throw new AssertionError("Invalid Pomodoro Type!");
 		}
 		p.attach(this);
+		
+		this.obs = Collections.synchronizedSet(new HashSet<Observer>());
 	}
 
 	public void update(Subject s) {
@@ -73,16 +94,41 @@ public class SinglePomodoroExecuter implements Observer {
 			switch (p.getState()) {
 			case RUNNING:
 				break;
-			case PAUSED:
-				break;
+			case PAUSED:				
 			case STOPPED:
 				break;
 			case FINISHED:
-				if (type == PomodoroType.WORK)
+				if (type == PomodoroType.WORK) {					
 					completedPomodoros++;
-
+					notifyObservers();					
+				}
 				break;
 			}
+		}
+	}
+	
+	@Override
+	public void attach(Observer o) {
+		synchronized (obs) {
+			if (o != null)
+				obs.add(o);
+		}
+
+	}
+
+	@Override
+	public void detach(Observer o) {
+		synchronized (obs) {
+			if (o != null && obs.contains(o))
+				obs.remove(o);
+		}
+	}
+
+	@Override
+	public void notifyObservers() {
+		synchronized (obs) {
+			for (Observer o : obs)
+				o.update(this);
 		}
 	}
 
