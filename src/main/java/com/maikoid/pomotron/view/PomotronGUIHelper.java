@@ -3,24 +3,18 @@ package com.maikoid.pomotron.view;
 import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.FontMetrics;
-import java.awt.Graphics;
 import java.awt.Graphics2D;
 import java.awt.Image;
 import java.awt.RenderingHints;
 import java.awt.SystemTray;
-import java.awt.Toolkit;
 import java.awt.geom.Rectangle2D;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.io.IOException;
 
-import javax.imageio.ImageIO;
+import dorkbox.notify.Notify;
+import dorkbox.notify.Pos;
+import dorkbox.util.ActionHandler;
 
-public class PomotronUtils {
-
-	static Image img = null;
-
+public class PomotronGUIHelper {
 	/**
 	 * Create a tray icon image.
 	 * 
@@ -31,7 +25,7 @@ public class PomotronUtils {
 	 *            The string to be rendered. Note that only the text height is
 	 *            fixed, long strings will not be properly rendered.
 	 */
-	public static Image createTrayIconImage(String renderedString, double textHeightScale) {
+	public static Image createIcon(String renderedString, BufferedImage backgroundImg, double textHeightScale) {
 		if (textHeightScale <= 0 || textHeightScale > 1) {
 			throw new IllegalArgumentException("Text height percentage should be in (0, 1].");
 		}
@@ -43,16 +37,8 @@ public class PomotronUtils {
 		BufferedImage iconImage = new BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB);
 		Graphics2D g2d = iconImage.createGraphics();
 
-		if (img == null) {
-			try {
-				img = ImageIO.read(PomotronUtils.class.getClassLoader().getResource("icons/24x24/pomotron.png"));
-			} catch (IOException e) {
-				e.printStackTrace();
-			}
-		}
-
 		g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-		g2d.drawImage(img, 0, 0, null);
+		g2d.drawImage(backgroundImg, 0, 0, null);
 
 		int textHeight = (int) Math.floor((h - 2) * textHeightScale);
 		Font font = new Font("Monospace", Font.PLAIN, textHeight);
@@ -67,5 +53,18 @@ public class PomotronUtils {
 		g2d.dispose();
 
 		return iconImage;
+	}
+
+	static void displayNotification(BufferedImage icon, String title, String args) {
+		Notify notify;
+
+		notify = Notify.create().title(title).text(args).hideAfter(3000).position(Pos.TOP_RIGHT).darkStyle()
+				.onAction(new ActionHandler<Notify>() {
+					@Override
+					public void handle(final Notify arg0) {
+					}
+				}).graphic(icon);
+		notify.show();
+
 	}
 }

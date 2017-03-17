@@ -1,19 +1,23 @@
 package com.maikoid.pomotron.view;
 
-import java.awt.Color;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
+import java.io.IOException;
 
+import javax.imageio.ImageIO;
 import javax.swing.SwingUtilities;
-
-import dorkbox.systemTray.Menu;
-import dorkbox.systemTray.MenuItem;
-import dorkbox.systemTray.Separator;
-import dorkbox.systemTray.SystemTray;
 
 import com.maikoid.pomotron.controller.SinglePomodoroExecuter;
 import com.maikoid.pomotron.controller.SinglePomodoroExecuter.PomodoroType;
-import com.maikoid.pomotron.model.*;
+import com.maikoid.pomotron.model.IChronometer;
+import com.maikoid.pomotron.model.Observer;
+import com.maikoid.pomotron.model.Pomodoro;
+import com.maikoid.pomotron.model.Subject;
+
+import dorkbox.systemTray.MenuItem;
+import dorkbox.systemTray.Separator;
+import dorkbox.systemTray.SystemTray;
 
 public class Pomotron implements Observer {
 
@@ -26,20 +30,68 @@ public class Pomotron implements Observer {
 	MenuItem cancelItem;
 	MenuItem exitItem;
 
+	BufferedImage imgNotify;
+	BufferedImage imgSystrayIcon;
+
 	SinglePomodoroExecuter pomExec;
+
+	IChronometer.STATE lastPomodoroState;
 
 	public void update(Subject s) {
 		if (s instanceof Pomodoro) {
-			IChronometer p = (Pomodoro) s;
+			Pomodoro p = (Pomodoro) s;
 
-			switch (p.getState()) {
-			case RUNNING:
-				break;
-			case PAUSED:
-			case STOPPED:
-			case FINISHED:
-				cancelPomodoroExecution();
-				break;
+			if (lastPomodoroState == null || lastPomodoroState != p.getState()) {
+
+				lastPomodoroState = p.getState();				
+
+				switch (p.getState()) {
+				case RUNNING:
+					switch (pomExec.type) {
+					case WORK:
+						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro", "Time to WORK!");
+						break;
+					case SHORT_BREAK:
+					case LONG_BREAK:
+						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Break", "Time to RELAX!");
+						break;
+					case INACTIVE:
+						break;
+					}
+					break;
+				case PAUSED:
+				case STOPPED:
+					switch (pomExec.type) {
+					case WORK:
+						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Interrupted",
+								"Start a new one when You are feeling ready!");
+						break;
+					case SHORT_BREAK:
+					case LONG_BREAK:
+						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Break Interrupted",
+								"Start a new Pomodoro if You are feeling ready!");
+						break;
+					case INACTIVE:
+						break;
+					}					
+					cancelPomodoroExecution();
+					break;
+				case FINISHED:
+					switch (pomExec.type) {
+					case WORK:
+						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Finished", "Time for a break!");
+						break;
+					case SHORT_BREAK:
+					case LONG_BREAK:
+						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Break Finished",
+								"You can start a new pomodoro when ready!");
+						break;
+					case INACTIVE:
+						break;
+					}					
+					cancelPomodoroExecution();
+					break;
+				}
 			}
 			updatePomodoroInfo(p);
 		}
@@ -49,9 +101,21 @@ public class Pomotron implements Observer {
 		tray = SystemTray.get();
 		if (tray == null) {
 			throw new RuntimeException("Unable to load SystemTray!");
+		}		
+
+		try {
+			imgNotify = ImageIO.read(Pomotron.class.getClassLoader().getResource("icons/48x48/pomotron.png"));
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 
-		tray.setImage(PomotronUtils.createTrayIconImage("P", 0.75));
+		try {
+			imgSystrayIcon = ImageIO.read(Pomotron.class.getClassLoader().getResource("icons/24x24/pomotron.png"));
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
+		
+		tray.setImage(PomotronGUIHelper.createIcon("", imgSystrayIcon, 0.75));
 
 		SwingUtilities.invokeLater(new Runnable() {
 			public void run() {
@@ -86,19 +150,19 @@ public class Pomotron implements Observer {
 
 		switch (pomExec.type) {
 		case WORK:
-			tray.setImage(PomotronUtils.createTrayIconImage(timeLeft, 0.75));
+			tray.setImage(PomotronGUIHelper.createIcon(timeLeft, imgSystrayIcon, 0.75));
 			tray.setStatus(String.format("Pomodoro: %s.", timeLeftString).toString());
 			break;
 		case SHORT_BREAK:
-			tray.setImage(PomotronUtils.createTrayIconImage(timeLeft, 0.75));
+			tray.setImage(PomotronGUIHelper.createIcon(timeLeft, imgSystrayIcon, 0.75));
 			tray.setStatus(String.format("Short Break: %s.", timeLeftString).toString());
 			break;
 		case LONG_BREAK:
-			tray.setImage(PomotronUtils.createTrayIconImage(timeLeft, 0.75));
+			tray.setImage(PomotronGUIHelper.createIcon(timeLeft, imgSystrayIcon, 0.75));
 			tray.setStatus(String.format("Long Break: %s.", timeLeftString).toString());
 			break;
 		case INACTIVE:
-			tray.setImage(PomotronUtils.createTrayIconImage("", 0.75));
+			tray.setImage(PomotronGUIHelper.createIcon("", imgSystrayIcon, 0.75));
 			break;
 		}
 	}
@@ -114,6 +178,7 @@ public class Pomotron implements Observer {
 
 	private void cancelPomodoroExecution() {
 		resetGUIPrePomodoro();
+		lastPomodoroState = null;
 
 		if (pomExec != null) {
 			pomExec.type = PomodoroType.INACTIVE;

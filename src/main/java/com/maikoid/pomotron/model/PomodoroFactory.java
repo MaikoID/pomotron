@@ -7,7 +7,7 @@ public class PomodoroFactory implements IPomodoroCreator{
 	public int LongBreakTime = 15;
 
 	public int ShortBreakTime = 5;
-
+	
 	public IChronometer workPomodoro(){ 
 		Pomodoro p = new Pomodoro();
 		p.setMinutes(WorkingTime);
