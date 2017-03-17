@@ -30,3 +30,9 @@ Download the .deb package in ``target/pomotron_1.0~SNAPSHOT_all.deb``
 ```
 
 * Ubuntu 16.10 tested.
+
+
+## TODO
+
+- Update the dorkbox Notify when the bug with empty windows has been fixed.
+- improve the jar generation with https://maven.apache.org/plugins/maven-shade-plugin/
