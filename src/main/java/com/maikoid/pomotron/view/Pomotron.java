@@ -70,8 +70,6 @@ public class Pomotron extends JFrame implements Observer {
 					case LONG_BREAK:
 						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Break", "Time to RELAX!");
 						break;
-					case INACTIVE:
-						break;
 					}
 					break;
 				case PAUSED:
@@ -88,8 +86,6 @@ public class Pomotron extends JFrame implements Observer {
 								"Start a new Pomodoro if You are feeling ready!");
 						tray.setStatus("Pomodoro Break Interrupted");
 						break;
-					case INACTIVE:
-						break;
 					}
 					PomodoroEndedExecution();
 					break;
@@ -104,8 +100,6 @@ public class Pomotron extends JFrame implements Observer {
 						PomotronGUIHelper.displayNotification(imgNotify, "Pomodoro Break Finished",
 								"You can start a new pomodoro when feeling ready =)");
 						tray.setStatus(pomExec.type + " Finished");
-						break;
-					case INACTIVE:
 						break;
 					}
 					PomodoroEndedExecution();
@@ -127,7 +121,6 @@ public class Pomotron extends JFrame implements Observer {
 				break;
 			case SHORT_BREAK:
 			case LONG_BREAK:
-			case INACTIVE:
 				break;
 			}
 
@@ -184,7 +177,7 @@ public class Pomotron extends JFrame implements Observer {
 					.appendSeparator(":").appendSeconds().toFormatter();
 
 			timeLeftString = pf.print(pe.getPomodoro().getTime().toPeriod());
-		}	
+		}
 
 		switch (pe.type) {
 		case WORK:
@@ -204,8 +197,6 @@ public class Pomotron extends JFrame implements Observer {
 				tray.setImage(PomotronGUIHelper.createIcon(timeLeft, imgSystrayIcon, 0.75));
 				tray.setStatus(String.format("Long Break: %s.", timeLeftString).toString());
 			}
-			break;
-		case INACTIVE:
 			break;
 		}
 
@@ -243,7 +234,7 @@ public class Pomotron extends JFrame implements Observer {
 			// so detach from the Subjects now
 			pomExec.getPomodoro().detach(this);
 			pomExec.detach(this);
-			
+
 		}
 
 		switch (type) {
@@ -262,16 +253,12 @@ public class Pomotron extends JFrame implements Observer {
 			cancelItem.setText("Cancel Break");
 			pomExec = new SinglePomodoroExecuter(PomodoroType.LONG_BREAK, this);
 			break;
-		case INACTIVE:
-			break;
-
 		}
 
-		if (type != PomodoroType.INACTIVE) {
-			pomExec.getPomodoro().attach(this);
-			cancelItem.setEnabled(true);
-			pomExec.start();
-		}
+		pomExec.getPomodoro().attach(this);
+		cancelItem.setEnabled(true);
+		pomExec.start();
+
 	}
 
 	/**

@@ -14,7 +14,7 @@ import com.maikoid.pomotron.model.PomodoroFactory;
 
 public class SinglePomodoroExecuter implements Observer, Subject {
 	public enum PomodoroType {
-		INACTIVE("in"), WORK("Work"), SHORT_BREAK("Short Break"), LONG_BREAK("Long Break");
+		WORK("Work"), SHORT_BREAK("Short Break"), LONG_BREAK("Long Break");
 		
 		private final String text;
 
