@@ -10,10 +10,13 @@
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<output-jar>${project.build.finalName}-deps.jar</output-jar>
+		<install-prefix>/usr/share/jdeb/lib</install-prefix>
 	</properties>
 
 	<build>
-		<plugins>
+
+		<plugins>			
 
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -26,39 +29,56 @@
 			</plugin>
 
 			<plugin>
-				<artifactId>maven-assembly-plugin</artifactId>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>com.maikoid.pomotron.view.Pomotron</mainClass>
-						</manifest>
-					</archive>
-					<descriptorRefs>
-						<descriptorRef>jar-with-dependencies</descriptorRef>
-					</descriptorRefs>
-				</configuration>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>3.0.0</version>
 				<executions>
 					<execution>
-						<id>make-assembly</id> <!-- this is used for inheritance merges -->
-						<phase>package</phase> <!-- bind to the packaging phase -->
+						<phase>package</phase>
 						<goals>
-							<goal>single</goal>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<transformers>
+								<transformer
+									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
+									<mainClass>com.maikoid.pomotron.view.Pomotron</mainClass>
+								</transformer>
+							</transformers>
+							<shadedArtifactAttached>true</shadedArtifactAttached>
+							<shadedClassifierName>deps</shadedClassifierName>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<groupId>com.google.code.maven-replacer-plugin</groupId>
+				<artifactId>replacer</artifactId>
+				<version>1.5.3</version>
+				<executions>
+					<execution>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>replace</goal>
 						</goals>
 					</execution>
 				</executions>
+				<configuration>
+					<file>target/classes/shortcuts/pomotron.desktop</file>
+					<replacements>
+						<replacement>
+							<token>@POMOTRON_JAR@</token>
+							<value>${install-prefix}/${output-jar}</value>
+						</replacement>
+					</replacements>
+				</configuration>
 			</plugin>
 
 			<plugin>
 				<artifactId>jdeb</artifactId>
 				<groupId>org.vafer</groupId>
 				<version>1.5</version>
-				<configuration>
-					<archive>
-						<manifest>
-							<mainClass>com.maikoid.pomotron.view.Pomotron</mainClass>
-						</manifest>
-					</archive>
-				</configuration>
 				<executions>
 					<execution>
 						<phase>package</phase>
@@ -71,18 +91,18 @@
 							<dataSet>
 
 								<data>
-									<src>${project.build.directory}/${project.build.finalName}-jar-with-dependencies.jar</src>
+									<src>${project.build.directory}/${output-jar}</src>
 									<type>file</type>
 									<mapper>
 										<type>perm</type>
-										<prefix>/usr/share/jdeb/lib</prefix>
+										<prefix>${install-prefix}</prefix>
 										<user>loader</user>
 										<group>loader</group>
 									</mapper>
 								</data>
 
 								<data>
-									<src>${basedir}/src/deb/applications/pomotron.desktop</src>
+									<src>target/classes/shortcuts/pomotron.desktop</src>
 									<type>file</type>
 
 									<mapper>
@@ -110,6 +130,7 @@
 					</execution>
 				</executions>
 			</plugin>
+
 
 		</plugins>
 	</build>
@@ -139,12 +160,12 @@
 			<artifactId>Notify</artifactId>
 			<version>2.20</version>
 		</dependency>
-		
+
 		<dependency>
-            <groupId>joda-time</groupId>
-            <artifactId>joda-time</artifactId>
-            <version>2.3</version>
-        </dependency>
+			<groupId>joda-time</groupId>
+			<artifactId>joda-time</artifactId>
+			<version>2.3</version>
+		</dependency>
 
 	</dependencies>
 </project>

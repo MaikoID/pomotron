@@ -1,7 +1,7 @@
 [Desktop Entry]
 Name=Pomotron 
 Type=Application
-Exec=java -jar /usr/share/jdeb/lib/pomotron-1.0-SNAPSHOT-jar-with-dependencies.jar
+Exec=java -jar @POMOTRON_JAR@
 Terminal=false
 Icon=pomotron
 Comment=Pomodoro Timer
