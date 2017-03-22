@@ -22,7 +22,6 @@ Remaining time is given in minutes if more than a minute is left. If less then a
 Download the .deb package in ``target/pomotron_1.0~SNAPSHOT_all.deb``
 ```bash
 	sudo dpkg -i pomotron_1.0~SNAPSHOT_all.deb
-	sudo update-desktop-database
 ```
 
 ```bash
