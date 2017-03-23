@@ -1,9 +1,0 @@
-[Desktop Entry]
-Name=Pomotron 
-Type=Application
-Exec=java -jar @POMOTRON_JAR@
-Terminal=false
-Icon=pomotron
-Comment=Pomodoro Timer
-NoDisplay=false
-Categories=Office;

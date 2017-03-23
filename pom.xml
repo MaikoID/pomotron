@@ -3,21 +3,133 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.maikoid.pomotron</groupId>
 	<artifactId>pomotron</artifactId>
-	<packaging>jar</packaging>
 	<version>1.0-SNAPSHOT</version>
-	<name>pomotron</name>
-	<url>http://maven.apache.org</url>
+	<name>Pomotron</name>
+	<url>https://github.com/MaikoID/pomotron</url>
+	<packaging>jar</packaging>
+
 
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-		<output-jar>${project.build.finalName}-deps.jar</output-jar>
-		<install-prefix>/usr/share/jdeb/lib</install-prefix>
+		<appjarpath>${project.build.finalName}.jar</appjarpath>
+		<!-- Installer variables -->		
+		<izpack.version>5.0.9</izpack.version>
+		<izpack.staging>${project.build.directory}/staging</izpack.staging>
+		<installer-output-filename>Pomotron-Installer.jar</installer-output-filename>
 	</properties>
+
+	<developers>
+		<developer>
+			<id>MaikoID</id>
+			<name>Maiko Cezar</name>
+			<email>MaikoID@users.noreply.github.com</email>
+			<timezone>+3</timezone>
+		</developer>
+	</developers>
+
 
 	<build>
 
-		<plugins>			
+		<defaultGoal>package</defaultGoal>
 
+		<plugins>
+
+			<!-- copy installer resources to the staging directory. -->
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>create-staging-area</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>run</goal>
+						</goals>
+						<configuration>
+							<tasks>
+								<copy todir="${izpack.staging}">
+									<fileset dir="${basedir}/src/main/izpack" />									
+								</copy>
+							</tasks>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<plugin>
+				<artifactId>maven-dependency-plugin</artifactId>
+				<configuration>
+					<excludeTransitive>false</excludeTransitive>
+					<overWriteReleases>true</overWriteReleases>
+					<overWriteSnapshots>true</overWriteSnapshots>
+					<overWriteIfNewer>true</overWriteIfNewer>
+				</configuration>
+				<executions>
+					<execution>
+						<!-- copy *application* jars to izpack staging lib -->
+						<id>copy-product-dependencies</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${izpack.staging}/lib</outputDirectory>
+							<excludeScope>system</excludeScope>
+							<excludeGroupIds>org.codehaus.izpack</excludeGroupIds>
+						</configuration>
+					</execution>
+					<execution>
+						<!-- copy izpack custom (custom panels, etc.) jars to izpack staging 
+							custom -->
+						<id>copy-izpack-dependencies</id>
+						<phase>prepare-package</phase>
+						<goals>
+							<goal>copy-dependencies</goal>
+						</goals>
+						<configuration>
+							<outputDirectory>${izpack.staging}/custom</outputDirectory>
+							<excludeTransitive>false</excludeTransitive>
+							<stripVersion>true</stripVersion>
+							<overWriteReleases>true</overWriteReleases>
+							<overWriteSnapshots>true</overWriteSnapshots>
+							<overWriteIfNewer>true</overWriteIfNewer>
+							<!-- IMPORTANT: this causes *only* our custom panels to be copied -->
+							<includeArtifactIds>izpack-panels</includeArtifactIds>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+
+			<plugin>
+				<groupId>org.codehaus.izpack</groupId>
+				<artifactId>izpack-maven-plugin</artifactId>
+				<version>${izpack.version}</version>
+				<configuration>
+					<descriptorEncoding>UTF-8</descriptorEncoding>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>izpack</goal>
+						</goals>
+						<configuration>
+							<!-- base for relative paths in izpack descriptor -->
+							<baseDir>${izpack.staging}</baseDir>
+							<installFile>${basedir}/src/main/izpack/install.xml</installFile>
+							<output>${project.build.directory}/${installer-output-filename}</output>
+						</configuration>
+					</execution>
+				</executions>
+				<dependencies>
+					<dependency>
+						<groupId>org.codehaus.izpack</groupId>
+						<artifactId>izpack-panel</artifactId>
+						<version>${izpack.version}</version>
+					</dependency>
+				</dependencies>
+			</plugin>
+			
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-surefire-plugin</artifactId>
@@ -27,110 +139,6 @@
 					<threadCount>10</threadCount>
 				</configuration>
 			</plugin>
-
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-shade-plugin</artifactId>
-				<version>3.0.0</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>shade</goal>
-						</goals>
-						<configuration>
-							<transformers>
-								<transformer
-									implementation="org.apache.maven.plugins.shade.resource.ManifestResourceTransformer">
-									<mainClass>com.maikoid.pomotron.view.Pomotron</mainClass>
-								</transformer>
-							</transformers>
-							<shadedArtifactAttached>true</shadedArtifactAttached>
-							<shadedClassifierName>deps</shadedClassifierName>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
-			<plugin>
-				<groupId>com.google.code.maven-replacer-plugin</groupId>
-				<artifactId>replacer</artifactId>
-				<version>1.5.3</version>
-				<executions>
-					<execution>
-						<phase>prepare-package</phase>
-						<goals>
-							<goal>replace</goal>
-						</goals>
-					</execution>
-				</executions>
-				<configuration>
-					<file>target/classes/shortcuts/pomotron.desktop</file>
-					<replacements>
-						<replacement>
-							<token>@POMOTRON_JAR@</token>
-							<value>${install-prefix}/${output-jar}</value>
-						</replacement>
-					</replacements>
-				</configuration>
-			</plugin>
-
-			<plugin>
-				<artifactId>jdeb</artifactId>
-				<groupId>org.vafer</groupId>
-				<version>1.5</version>
-				<executions>
-					<execution>
-						<phase>package</phase>
-						<goals>
-							<goal>jdeb</goal>
-						</goals>
-						<configuration>
-							<verbose>true</verbose>
-							<controlDir>${basedir}/src/deb/control</controlDir>
-							<dataSet>
-
-								<data>
-									<src>${project.build.directory}/${output-jar}</src>
-									<type>file</type>
-									<mapper>
-										<type>perm</type>
-										<prefix>${install-prefix}</prefix>
-										<user>loader</user>
-										<group>loader</group>
-									</mapper>
-								</data>
-
-								<data>
-									<src>target/classes/shortcuts/pomotron.desktop</src>
-									<type>file</type>
-
-									<mapper>
-										<type>perm</type>
-										<prefix>/usr/share/applications</prefix>
-										<user>loader</user>
-										<group>loader</group>
-										<filemode>755</filemode>
-
-									</mapper>
-								</data>
-
-								<data>
-									<src>${basedir}/src/main/resources/icons/48x48/pomotron.png</src>
-									<type>file</type>
-									<mapper>
-										<type>perm</type>
-										<prefix>/usr/share/icons</prefix>
-										<user>loader</user>
-										<group>loader</group>
-									</mapper>
-								</data>
-							</dataSet>
-						</configuration>
-					</execution>
-				</executions>
-			</plugin>
-
 
 		</plugins>
 	</build>
@@ -143,6 +151,7 @@
 	</repositories>
 
 	<dependencies>
+
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -165,6 +174,12 @@
 			<groupId>joda-time</groupId>
 			<artifactId>joda-time</artifactId>
 			<version>2.3</version>
+		</dependency>
+
+		<dependency>
+			<groupId>org.codehaus.izpack</groupId>
+			<artifactId>izpack-maven-plugin</artifactId>
+			<version>5.0.10</version>
 		</dependency>
 
 	</dependencies>
